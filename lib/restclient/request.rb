@@ -1,6 +1,7 @@
 require 'tempfile'
 require 'mime/types'
 require 'cgi'
+require 'logger'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -140,6 +141,16 @@ module RestClient
       setup_credentials req
 
       net = net_http_class.new(uri.host, uri.port)
+      # DEBUG INFO
+      logger = Logger.new('/tmp/rest-client.log')
+      logger.formatter = Logger::Formatter.new
+      def logger.<<(*args)
+        args.first.gsub!("\n", '') if args.first
+        self.info *args
+      end
+      net.set_debug_output(logger)
+      # DEBUG INFO
+
       net.use_ssl = uri.is_a?(URI::HTTPS)
       if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
